@@ -26,9 +26,22 @@ input, textarea
 button{
   width:30%;
   align-content: center;
+  color: coral;
 }
 textarea
 {
   height: 300px;
 }
+#display_message{
+  color: red;
+  align-content: center;
+  font-family: "Gill Sans", sans-serif;
+  font-size: medium;
+}
 
+#success_message{
+  color: purple;
+  align-content: center;
+  font-family: "Gill Sans", sans-serif;
+  font-size: large;
+}

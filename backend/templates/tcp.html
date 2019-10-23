@@ -23,16 +23,13 @@
                 </form>
 
                 <div id="display_message" style="display:block">
-                    <p>
-                        {% with messages = get_flashed_messages() %}
+                        {% with messages = get_flashed_messages(category_filter=["msg1"]) %}
                             {% if messages %}
                                 {% for message in messages %}
                                     <h4>{{ message }}</h4>
                                 {% endfor %}
                             {% endif %}
                         {% endwith %}
-                    </p>
-                    
                 </div>
             </div>
             <br>
@@ -41,7 +38,7 @@
                     <h1>
                         Add Pokemon Power
                     </h1>
-                    <form action="/add" id="reused_form" >
+                    <form action="/addPokemon" method = "POST" id="reused_form" enctype="application/x-www-form-urlencoded">
                         <label for="name">Name:</label>
                         <input type="text" name="addname">
                         <label for="power">Power:</label>
@@ -49,8 +46,8 @@
                         <br></br>
                         <button type="submit" class="btn btn-warning">Add power!</button>
                     </form>
-                    <div id="success_message" style="display:none">
-                        {% with messages = get_flashed_messages() %}
+                    <div id="success_message" style="display:block">
+                        {% with messages = get_flashed_messages(category_filter=["msg2"]) %}
                             {% if messages %}
                                 {% for message in messages %}
                                     <h4>{{ message }}</h4>

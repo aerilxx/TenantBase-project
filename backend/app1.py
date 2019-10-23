@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request,flash, Response, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine,MetaData, Table, select
-import sys
 import memcache
 
 app = Flask(__name__)
@@ -39,7 +38,6 @@ def query_db(pokemon):
             res = _row[1]
     except Exception as e:
         res = "invalid"
-        print(e)
     
     return res
 
@@ -51,26 +49,27 @@ def add_db(pokemon, power):
     table = db.Table('emp', metadata, autoload=True, autoload_with=engine)
     #Inserting record one by one
     try:
-        query = db.insert(table)
-        item = [{'Name': '{}'.format(pokemon), 'Power': '{}'.format(power)}]
-        
+        # check if this pokemon already in db
         if_exist = table.select().where(table.c.Name == '{}'.format(pokemon))
         result = connection.execute(if_exist)
+        
         if pokemon == result:
             msg = "You cannot add duplicate pokemon in db."
         else:
+            query = db.insert(table)
+            item = [{'Name': '{}'.format(pokemon), 'Power': '{}'.format(power)}]
             connection.execute(query,item)  
-            msg = "add {} successfully!".format(pokemon)
-            
-    except SQLAlchemyError as e:
+            msg = "Add {} successfully!".format(pokemon)
+           
+    except Exception as e:
         msg = e
      
-    return msg
+    return str(msg)
 
 
 @app.route('/')
 def index():
-    data = fetchData('')
+    data = fetchData()
     return render_template('index.html', pokemons = data)
 
 
@@ -79,8 +78,7 @@ def display_form():
     return render_template('tcp.html')
 
 @app.route('/searchPokemon', methods = ['GET'])
-def showdata():    
-
+def searchPokemon():    
 # first form
     if request.method == "GET":
         search_pokemon = request.values['searchname']
@@ -106,13 +104,18 @@ def showdata():
             else:
                 # data already in memcached
                 mem_result = client.get(search_pokemon)
-                print(mem_result)
-                msg = "got the data directly from memcache! => {p} has {d} power!".format(p=search_pokemon, d=mem_result)
+                if mem_result is '':
+                    msg = "Seems that {p} is in memcache but no power assign yet!".format(p=search_pokemon)
+                else:
+                    msg = "Got the data directly from memcache! => {p} has {d} power!".format(p=search_pokemon, d=mem_result)
             
-        flash(msg)
+        flash(msg,'msg1')
+        
+    return render_template('tcp.html')
 
+@app.route('/addPokemon', methods = ['POST'])
+def addPokemon():
 # second form, add pokemon and power to database
-
     add_pokemon = request.values['addname']
     add_power = request.values['addpower']
 
@@ -120,30 +123,26 @@ def showdata():
     if add_pokemon is '' or add_power is '':
         msg2 = "please submit a valid pokemon and power."
     else:
-        mem_result = client.get(add_pokemon)   
-
+        mem_result = client.get(add_pokemon)  
+ 
+        # new pokemon is not in the cache
         if mem_result is None:
-            db_result = query_db(add_pokemon)
             
-            if db_result == 'invalid':
-                info = add_db(add_pokemon, add_power)
-                msg = "We don't have this pokemon in database!! You can add it! "+info
-
-            # if the data not in cache but in database
-            else:
-                msg = "Seems like this pokemon is in database."
+            info = add_db(add_pokemon, add_power)
+            client.set(add_pokemon,add_power)
+            msg2 = "We don't have this pokemon in database!! " + info
                     
         else:
-            # data already in memcached
-            msg = "This pokemon already exists from memcache! => {p} has {d} power!".format(p=add_pokemon, d=mem_result)
-        
-
-
-
+            if mem_result is '':
+                msg2 = "Seems that {p} is in memcache but no power assign yet!".format(p=add_pokemon)
+            else:
+                # data already in memcached, do nothing
+                msg2 = "This pokemon already exists from memcache! => {p} has {d} power!".format(p=add_pokemon, d=mem_result)
+            
+       
+        flash(msg2,'msg2')
 
     return render_template('tcp.html')
-
-   
 
 if __name__ == '__main__':
     app.run(port = 5000, debug=True)
