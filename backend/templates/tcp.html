@@ -46,8 +46,31 @@
                         <br></br>
                         <button type="submit" class="btn btn-warning">Add power!</button>
                     </form>
-                    <div id="success_message" style="display:block">
+                    <div id="display_message" style="display:block">
                         {% with messages = get_flashed_messages(category_filter=["msg2"]) %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <h4>{{ message }}</h4>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+            </div>
+
+            <div class="form-container">
+                    <h1>
+                        Delete Pokemon Power
+                    </h1>
+                    <form action="/delPokemon" method = "POST" id="reused_form" enctype="application/x-www-form-urlencoded">
+                        <label for="name">Name:</label>
+                        <input type="text" name="delname">
+                        <label for="power">Power:</label>
+                        <input type="text" name="delpower">
+                        <br></br>
+                        <button type="submit" class="btn btn-warning">Delete pokemon!</button>
+                    </form>
+                    <div id="display_message" style="display:block">
+                        {% with messages = get_flashed_messages(category_filter=["msg3"]) %}
                             {% if messages %}
                                 {% for message in messages %}
                                     <h4>{{ message }}</h4>

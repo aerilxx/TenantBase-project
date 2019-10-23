@@ -13,11 +13,16 @@ db = SQLAlchemy(app)
 client = memcache.Client([('localhost', 11211)])
 
 # database related func
-def fetchData():
+def connect_db():
     engine = db.create_engine('sqlite:///database.db',{})
     connection = engine.connect()
     metadata = db.MetaData()
     table = db.Table('emp', metadata, autoload=True, autoload_with=engine)
+
+    return connection , table
+
+def fetch_db():
+    connection , table = connect_db()
     cmd = db.select([table])
     resultProxy = connection.execute(cmd)
     resultSet = resultProxy.fetchall()
@@ -26,10 +31,7 @@ def fetchData():
 
 def query_db(pokemon):
     res = ''
-    engine = db.create_engine('sqlite:///database.db',{})
-    connection = engine.connect()
-    metadata = db.MetaData()
-    table = db.Table('emp', metadata, autoload=True, autoload_with=engine)
+    connection , table = connect_db()
     try:
         select_st2 = table.select().where(table.c.Name == '{}'.format(pokemon))
         result = connection.execute(select_st2)
@@ -43,10 +45,7 @@ def query_db(pokemon):
 
 def add_db(pokemon, power):
     msg = ""
-    engine = db.create_engine('sqlite:///database.db',{})
-    connection = engine.connect()
-    metadata = db.MetaData()
-    table = db.Table('emp', metadata, autoload=True, autoload_with=engine)
+    connection , table = connect_db()
     #Inserting record one by one
     try:
         # check if this pokemon already in db
@@ -66,10 +65,24 @@ def add_db(pokemon, power):
      
     return str(msg)
 
+def del_db(pokemon, power):
+    msg = ""
+    connection , table = connect_db()
+    try:
+        query = db.delete(table)
+        item = [{'Name': '{}'.format(pokemon), 'Power': '{}'.format(power)}]
+        connection.execute(query,item)       
+        msg = "Delete {} successfully!".format(pokemon)
+           
+    except Exception as e:
+        msg = e
+     
+    return str(msg)
 
+##############             frontend route              #################
 @app.route('/')
 def index():
-    data = fetchData()
+    data = fetch_db()
     return render_template('index.html', pokemons = data)
 
 
@@ -127,7 +140,7 @@ def addPokemon():
  
         # new pokemon is not in the cache
         if mem_result is None:
-            
+            # add both to memcached and db for future retrival
             info = add_db(add_pokemon, add_power)
             client.set(add_pokemon,add_power)
             msg2 = "We don't have this pokemon in database!! " + info
@@ -138,11 +151,29 @@ def addPokemon():
             else:
                 # data already in memcached, do nothing
                 msg2 = "This pokemon already exists from memcache! => {p} has {d} power!".format(p=add_pokemon, d=mem_result)
-            
-       
+                  
         flash(msg2,'msg2')
 
     return render_template('tcp.html')
 
+
+@app.route('/delPokemon', methods = ['POST'])
+def delPokemon():
+# second form, add pokemon and power to database
+    del_pokemon = request.values['delname']
+    del_power = request.values['delpower']
+
+    msg3 = ''
+    if del_pokemon is '' or del_power is '':
+        msg3 = "You cannot delete nothing. "
+    else:
+        info = del_db(del_pokemon, del_power)
+        client.delete(del_pokemon)
+        msg3 = "Delete this pokemon from both memcache and database. " + info
+                 
+    flash(msg3,'msg3')
+
+    return render_template('tcp.html')
+
 if __name__ == '__main__':
-    app.run(port = 5000, debug=True)
+    app.run(port = 8000, debug=True)
