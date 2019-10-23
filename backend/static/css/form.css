@@ -1,0 +1,34 @@
+body{
+  background-color: #c4d3f6;
+}
+
+@media  only screen and (min-device-width: 768px) 
+{
+    .form-container {
+      padding: 5%;
+      background: #c4d3f6;
+      border: 9px solid#006fab;          
+      max-width: 680px;
+      margin: auto;
+    }
+
+}
+
+h1, p, h4
+{
+  text-align: center;
+}
+
+input, textarea 
+{
+  width: 100%;
+}    
+button{
+  width:30%;
+  align-content: center;
+}
+textarea
+{
+  height: 300px;
+}
+
