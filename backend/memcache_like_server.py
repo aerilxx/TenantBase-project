@@ -16,7 +16,6 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
             data_split = data.split()
 
             cmdlen = len(data_split)
-            command = data_split[0].lower()
 
             if cmdlen == 6:
                 command = data_split[0].lower()
@@ -46,8 +45,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                         
                         if cache[key]:
                             flags, exptime, length, value = cache[key]
-                            #output += b"VALUE %s %d %d\r\n%s\r\n" % (key, flags, len(value), value)
-                            #print(value)
+                      
                             self.wfile.write(value + b" END\r\n")
 
                             print("value for {k} is {v}".format(k = key, v = value))
@@ -60,8 +58,6 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
 
                         if cache[key]:
                             del cache[key]
-                            print('delete')
-                            print(cache)
                             self.wfile.write(b"Delete! \r\n")
                         else:
                             self.wfile.write(b"you cannot delete it because no value found! \r\n")
