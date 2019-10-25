@@ -41,35 +41,34 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                 if key not in cache:
                     self.wfile.write(b"you have to initiate the cache first! \r\n")
 
-                if command == b"get":
-                    
-                    output = b""
-                    
-                    if cache[key]:
-                        flags, exptime, length, value = cache[key]
-                        #output += b"VALUE %s %d %d\r\n%s\r\n" % (key, flags, len(value), value)
-                        #print(value)
-                        self.wfile.write(value + b" END\r\n")
-
-                        print("value for {k} is {v}".format(k = key, v = value))
-                    else:
-                        self.wfile.write(b"no value found! \r\n")
-                        print("{} is not in cache! ".format(key))
-
-                elif command == b"delete":
-                    key = data_split[1]
-
-                    if cache[key]:
-                        del cache[key]
-                        print('delete')
-                        print(cache)
-                        self.wfile.write(b"Delete! \r\n")
-                    else:
-                        self.wfile.write(b"you cannot delete it because no value found! \r\n")
-                        print("You cannot delete {} because it is not saved! ".format(key))
-
                 else:
-                    self.wfile.write(b"please only use get/detele/set commend! \r\n")
+                    if command == b"get":
+                        
+                        if cache[key]:
+                            flags, exptime, length, value = cache[key]
+                            #output += b"VALUE %s %d %d\r\n%s\r\n" % (key, flags, len(value), value)
+                            #print(value)
+                            self.wfile.write(value + b" END\r\n")
+
+                            print("value for {k} is {v}".format(k = key, v = value))
+                        else:
+                            self.wfile.write(b"no value found! \r\n")
+                            print("{} is not in cache! ".format(key))
+
+                    elif command == b"delete":
+                        key = data_split[1]
+
+                        if cache[key]:
+                            del cache[key]
+                            print('delete')
+                            print(cache)
+                            self.wfile.write(b"Delete! \r\n")
+                        else:
+                            self.wfile.write(b"you cannot delete it because no value found! \r\n")
+                            print("You cannot delete {} because it is not saved! ".format(key))
+
+                    else:
+                        self.wfile.write(b"please only use get/detele/set commend! \r\n")
             
             else:
                 self.wfile.write(b"please check your commend again! \r\n")
