@@ -9,8 +9,8 @@ def insert_data():
 
     # create tables
     emp = db.Table('emp', metadata,
-	              db.Column('Name', db.String(255), nullable=False),
-	              db.Column('Power', db.String(255))
+	              db.Column('Name', db.String(255), unique=True,nullable=False),
+	              db.Column('Power', db.String(255),unique=True,nullable=False)
 	              )
     
     metadata.create_all(engine) 
