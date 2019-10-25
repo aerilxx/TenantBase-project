@@ -8,8 +8,10 @@ Interview project for tenantbase
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# run bash file to set up memcached in background and instatiate to DB
+# instantiate db for display (once)
+cd backend
+python create_db.py
+# run bash file to set up memcached in background and run main flask as well as new server
 bash run.sh
 ```
 
@@ -17,9 +19,6 @@ bash run.sh
 * http://127.0.0.1:8000/add to manipulate db in browser, new data will be automatically cached in memcached
 
 ```
-# run memcache-like-server on another port bc 11211 is taken in flask 
-python backend/memcache_like_server.py
-
 # connect to this server in another cmd
 telnet 120.0.0.1 110210
 ```
