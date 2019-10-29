@@ -2,27 +2,31 @@ from flask import Flask, render_template, request,flash, Response, redirect, url
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine,MetaData, Table, select
 import memcache
+import socket
+import sys
 
 app = Flask(__name__)
 app.secret_key ="secret"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
+
 db = SQLAlchemy(app)
+
 
 # set up memcache client
 client = memcache.Client([('localhost', 11211)])
 
 # database related func
-def connect_db():
-    engine = db.create_engine('sqlite:///database.db',{})
+def connect_db(tabel_name):
+    engine = db.create_engine('sqlite:///database.sqlite',{})
     connection = engine.connect()
     metadata = db.MetaData()
-    table = db.Table('emp', metadata, autoload=True, autoload_with=engine)
+    table = db.Table('{}'.format(tabel_name), metadata, autoload=True, autoload_with=engine)
 
     return connection , table
 
-def fetch_db():
-    connection , table = connect_db()
+def fetch_db(tabel_name):
+    connection , table = connect_db(tabel_name)
     cmd = db.select([table])
     resultProxy = connection.execute(cmd)
     resultSet = resultProxy.fetchall()
@@ -31,7 +35,7 @@ def fetch_db():
 
 def query_db(pokemon):
     res = ''
-    connection , table = connect_db()
+    connection , table = connect_db('emp')
     try:
         select_st2 = table.select().where(table.c.Name == '{}'.format(pokemon))
         result = connection.execute(select_st2)
@@ -45,7 +49,7 @@ def query_db(pokemon):
 
 def add_db(pokemon, power):
     msg = ""
-    connection , table = connect_db()
+    connection , table = connect_db('emp')
     #Inserting record one by one
     try:
         # check if this pokemon already in db
@@ -67,7 +71,7 @@ def add_db(pokemon, power):
 
 def del_db(pokemon, power):
     msg = ""
-    connection , table = connect_db()
+    connection , table = connect_db('emp')
     try:
         query = db.delete(table)
         item = [{'Name': '{}'.format(pokemon), 'Power': '{}'.format(power)}]
@@ -79,10 +83,43 @@ def del_db(pokemon, power):
      
     return str(msg)
 
+# Create a TCP/IP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect the socket to the port where the server is listening
+server_address = ("127.0.0.1", 11210)
+print(sys.stderr, 'connecting to %s port %s' % server_address)
+
+'''
+def set_data(key, value):
+    sock.connect(server_address)
+
+    try: 
+        # Send data
+        message = "set {k} flag 0 len {v}".format(k = key, v=value)
+        print >>sys.stderr, 'sending "%s"' % message
+        sock.sendall(message)
+
+        # Look for the response
+        amount_received = 0
+        amount_expected = len(message)
+    
+    while amount_received < amount_expected:
+        data = sock.recv(16)
+        amount_received += len(data)
+        print >>sys.stderr, 'received "%s"' % data
+
+    finally:
+        print >>sys.stderr, 'closing socket'
+        sock.close()
+'''
+
+
 ##############             frontend route              #################
+
 @app.route('/')
 def index():
-    data = fetch_db()
+    data = fetch_db('emp')
     return render_template('index.html', pokemons = data)
 
 
@@ -175,5 +212,12 @@ def delPokemon():
 
     return render_template('tcp.html')
 
+@app.route('/display')
+def display_server_data():
+    data = fetch_db('server')
+    return render_template('display.html', data = data)
+
+
+
 if __name__ == '__main__':
-    app.run(port = 8000, debug=True)
+    app.run(port = 5000, debug=True)

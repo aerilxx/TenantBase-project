@@ -1,7 +1,57 @@
 import socketserver
 import time
+import sqlite3
 
 cache = {}
+
+def create_db():
+    conn = sqlite3.connect('database.sqlite')
+    cursor = conn.cursor()
+   
+    # check if table exist
+    exist = ''' SELECT count(name) FROM sqlite_master WHERE type='table' and name= 'server' '''
+    cursor.execute(exist)
+
+    #if the count is 1, then table exists
+    if cursor.fetchone()[0]==1:
+        pass
+    else:
+        cursor.execute('''CREATE TABLE server
+         (key          TEXT    NOT NULL,
+         value          TEXT     NOT NULL)''')
+
+    conn.commit()
+    conn.close()
+
+def save_to_db(key,value):
+    conn = sqlite3.connect('database.sqlite')
+    cursor = conn.cursor()
+    query = "INSERT INTO server (key,value) VALUES (?,?)"
+    data = (key.decode('ascii'), value.decode('ascii'))
+    cursor.execute(query, data)
+
+    conn.commit()
+    conn.close()
+
+def delete_from_db(key):
+    conn = sqlite3.connect('database.sqlite')
+    cursor = conn.cursor()
+    query = "DELETE FROM server where key = ?"
+    cursor.execute(query, key.decode('ascii'))
+    conn.commit()
+    conn.close()
+
+def if_exist(key):
+    conn = sqlite3.connect('database.sqlite')
+    cursor = conn.cursor()
+    query = "SELECT key, value FROM server WHERE key=?"
+    data = (key.decode('ascii'))
+    cursor.execute(query, data)
+    result = cursor.fetchone()
+    if result:
+        return True
+    else:
+        return False
 
 class MyTCPHandler(socketserver.StreamRequestHandler):
 
@@ -10,7 +60,8 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
         while True:
             if not self.rfile.peek():
                 break
-
+            
+            create_db()   
             data = self.rfile.readline().strip()
             print("{} wrote: {}".format(self.client_address[0], data))
             data_split = data.split()
@@ -28,6 +79,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     if value:
                         cache[key] = (flags, exptime, length, value)
                         self.wfile.write(b"STORED\r\n")
+                        save_to_db(key,value)
 
                     else:
                         print("please provide a value to store. ")
@@ -37,7 +89,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                 command = data_split[0].lower()
                 key = data_split[1]
 
-                if key not in cache:
+                if key not in cache and not if_exist(key):
                     self.wfile.write(b"you have to initiate the cache first! \r\n")
 
                 else:
@@ -58,6 +110,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
 
                         if cache[key]:
                             del cache[key]
+                            delete_from_db(key)
                             self.wfile.write(b"Delete! \r\n")
                         else:
                             self.wfile.write(b"you cannot delete it because no value found! \r\n")
@@ -68,6 +121,8 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
             
             else:
                 self.wfile.write(b"please check your commend again! \r\n")
+    
+
 
 
 if __name__ == "__main__":
