@@ -12,14 +12,11 @@ pip install -r requirements.txt
 cd backend
 python create_db.py
 # run bash file to set up memcached in background and run main flask as well as new server
-bash run.sh
+bash backend/run.sh
 ```
 
-* http://127.0.0.1:8000 to view initial data in db
-* http://127.0.0.1:8000/add to manipulate db in browser, new data will be automatically cached in memcached
+* http://127.0.0.1:5000 to view initial data in db
+* http://127.0.0.1:5000/add to manipulate db in browser, new data will be automatically cached in memcached
+* http://127.0.0.1:5000/display to display server data
 
-```
-# connect to this server in another cmd
-telnet 120.0.0.1 110210
-```
-You can perform set/get/delete function 
+You can perform set/get/delete function using telnet 127.0.0.1 11210
