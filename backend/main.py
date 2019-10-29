@@ -12,7 +12,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
 
 db = SQLAlchemy(app)
 
-
 # set up memcache client
 client = memcache.Client([('localhost', 11211)])
 
@@ -83,6 +82,7 @@ def del_db(pokemon, power):
      
     return str(msg)
 
+'''
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -90,7 +90,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ("127.0.0.1", 11210)
 print(sys.stderr, 'connecting to %s port %s' % server_address)
 
-'''
+
 def set_data(key, value):
     sock.connect(server_address)
 

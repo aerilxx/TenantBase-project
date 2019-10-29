@@ -1,6 +1,7 @@
 import socketserver
 import time
 import sqlite3
+import sys
 
 cache = {}
 
@@ -127,6 +128,9 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
 
 if __name__ == "__main__":
     HOST, PORT = "127.0.0.1", 11210
+    server_address = ("127.0.0.1", 11210)
+    print(sys.stderr, 'connecting to %s port %s' % server_address)
+
     with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
         server.serve_forever()
 
